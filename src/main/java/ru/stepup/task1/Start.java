@@ -3,15 +3,19 @@ package ru.stepup.task1;
 public class Start {
     public static void main(String[] args) {
         Account acc = new Account("vasia");
-        AccountState state = new AccountState(acc);
+        acc.save();
         System.out.println(acc);
-        acc.setCurrencyValue(Currency.EUR, 100);
-        acc.setCurrencyValue(Currency.RUB, 100);
+        acc.putCurrencyValue(Currency.EUR, 100);
+        acc.putCurrencyValue(Currency.RUB, 100);
+        System.out.println(acc);
+        acc.undo();
+        System.out.println(acc);
+        acc.undo();
         System.out.println(acc);
 
-        acc.restore(state);
-        acc.setCurrencyValue(Currency.RUB, 100);
-        acc.setCurrencyValue(Currency.EUR, 100);
+        acc.restore();
+        acc.putCurrencyValue(Currency.RUB, 100);
+        acc.putCurrencyValue(Currency.EUR, 100);
         System.out.println(acc);
 
     }

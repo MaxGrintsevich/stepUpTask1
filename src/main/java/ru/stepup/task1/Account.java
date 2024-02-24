@@ -4,50 +4,50 @@ import lombok.Getter;
 
 import java.util.*;
 
+
+
+
 public class Account {
-    public void setName(String name) {
-        history.push(save());
-        this.name = name;
-    }
 
     @Getter
-    String name;
-
-    public HashMap<Currency, Integer> getValues() {
-        return new HashMap<>(values);
-    }
-
-    Map<Currency, Integer> values = new HashMap<>();
-
-    Stack<AccountState> history = new Stack<>();
+    private String name;
+    private Map<Currency, Integer> values = new HashMap<>();
+    private Stack<Executable> history = new Stack<>();
+    private AccountState state;
 
     public Account(String name){
         if (name == null || name.length() == 0) throw new IllegalArgumentException("Cannot create account: empty name!");
         this.name = name;
     }
 
-    public AccountState save(){
-       return new AccountState(this);
+    public void setName(String name) {
+        history.push(new NameChanger(this));
+        this.name = name;
     }
 
-    public void setCurrencyValue(Currency cur, Integer value){
+    public HashMap<Currency, Integer> getValues() {
+        return new HashMap<>(values);
+    }
+
+    public void save(){
+       this.state = new AccountState(this);
+    }
+
+    public void putCurrencyValue(Currency cur, Integer value){
         if (cur == null) throw new IllegalArgumentException("Currency must be not null!");
         if (value == null || value < 0) throw new IllegalArgumentException("value must be > 0!");
-        history.push(save());
+        history.push(new ValueChanger(this, cur));
         values.put(cur, value);
     }
-    private void setState(AccountState state){
-        this.name = state.getName();
-        this.values = state.getValues();
-    }
-    public void restore(AccountState state){
-        this.setState(state);
+    public void restore(){
+        this.name = this.state.getName();
+        this.values = this.state.getValues();
         this.history = new Stack<>();
     }
     public void undo(){
         if (history.isEmpty()) throw new EmptyAccountHistoryException("Cannot undo last change: History is empty!");
-        AccountState state = history.pop();
-        setState(state);
+        Executable changer = history.pop();
+        changer.execute();
     }
     public boolean isUndoAvailable(){
         return !history.isEmpty();
@@ -59,5 +59,53 @@ public class Account {
                 ", values=" + values +
                 ", history=" + history +
                 '}';
+    }
+
+    class ValueChanger implements Executable{
+        Currency currency;
+        Integer value;
+        Account account;
+        ValueChanger(Account account, Currency currency){
+            this.currency = currency;
+            this.value = account.values.containsKey(currency) ? values.get(currency) : null;
+            this.account = account;
+        }
+
+
+        @Override
+        public void execute() {
+            if (this.value == null)
+                account.values.remove(currency);
+            else account.values.put(currency, value);
+        }
+
+        @Override
+        public String toString() {
+            return "ValueChanger{" +
+                    "currency=" + currency +
+                    ", value=" + value +
+                    '}';
+        }
+    }
+
+    class NameChanger implements Executable{
+        Account account;
+        String name;
+        NameChanger(Account account){
+            this.account = account;
+            this.name = account.name;
+        }
+
+        @Override
+        public void execute() {
+            account.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return "NameChanger{" +
+                    "name='" + name + '\'' +
+                    '}';
+        }
     }
 }
