@@ -12,7 +12,7 @@ public class Account {
     @Getter
     private String name;
     private Map<Currency, Integer> values = new HashMap<>();
-    private Stack<Executable> history = new Stack<>();
+    private Deque<Executable> history = new ArrayDeque<>();
     private AccountState state;
 
     public Account(String name){
@@ -42,7 +42,7 @@ public class Account {
     public void restore(){
         this.name = this.state.getName();
         this.values = this.state.getValues();
-        this.history = new Stack<>();
+        this.history = new ArrayDeque<>();
     }
     public void undo(){
         if (history.isEmpty()) throw new EmptyAccountHistoryException("Cannot undo last change: History is empty!");
