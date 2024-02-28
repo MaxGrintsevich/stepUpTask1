@@ -21,7 +21,8 @@ public class Account {
     }
 
     public void setName(String name) {
-        history.push(new NameChanger(this));
+        String tmp = this.name;
+        history.push(()-> Account.this.name = tmp);
         this.name = name;
     }
 
@@ -36,7 +37,15 @@ public class Account {
     public void putCurrencyValue(Currency cur, Integer value){
         if (cur == null) throw new IllegalArgumentException("Currency must be not null!");
         if (value == null || value < 0) throw new IllegalArgumentException("value must be > 0!");
-        history.push(new ValueChanger(this, cur));
+
+        Executable action;
+
+        if (this.values.containsKey(cur))
+            action = ()->Account.this.values.put(cur, values.get(cur));
+        else
+            action = ()-> Account.this.values.remove(cur);
+
+        history.push(action);
         values.put(cur, value);
     }
     public void restore(){
@@ -61,51 +70,4 @@ public class Account {
                 '}';
     }
 
-    class ValueChanger implements Executable{
-        Currency currency;
-        Integer value;
-        Account account;
-        ValueChanger(Account account, Currency currency){
-            this.currency = currency;
-            this.value = account.values.containsKey(currency) ? values.get(currency) : null;
-            this.account = account;
-        }
-
-
-        @Override
-        public void execute() {
-            if (this.value == null)
-                account.values.remove(currency);
-            else account.values.put(currency, value);
-        }
-
-        @Override
-        public String toString() {
-            return "ValueChanger{" +
-                    "currency=" + currency +
-                    ", value=" + value +
-                    '}';
-        }
-    }
-
-    class NameChanger implements Executable{
-        Account account;
-        String name;
-        NameChanger(Account account){
-            this.account = account;
-            this.name = account.name;
-        }
-
-        @Override
-        public void execute() {
-            account.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return "NameChanger{" +
-                    "name='" + name + '\'' +
-                    '}';
-        }
-    }
 }
